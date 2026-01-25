@@ -64,12 +64,19 @@ function getServiceInstance(serviceName) {
       return new AAAService();
     case 'jyb':
       return new JYBService();
+    case 'seednet':
+      return new SeednetService();
+    case 'elf':
+      return new ElfService();
+    case 'fet':
+      return new FetService();
     default:
       return null;
   }
 }
 
-function skipService(serviceName) {
+function skipService() {
+  let serviceName = 'fet';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -84,6 +91,56 @@ function skipService(serviceName) {
   
   db.skipService(serviceName, ids);
   Logger.log(`Skip completed for ${serviceName}`);
+}
+
+function debugService() {
+  let serviceName = 'fet';
+  const CONFIG = getConfig();
+  const service = getServiceInstance(serviceName);
+  
+  if (!service) {
+    Logger.log(`Service ${serviceName} not found`);
+    return;
+  }
+  
+  const serviceConfig = CONFIG.SERVICES.find(s => s.name === serviceName);
+  if (!serviceConfig) {
+    Logger.log(`Service config for ${serviceName} not found`);
+    return;
+  }
+  
+  Logger.log(`\n========== DEBUG: ${serviceName} ==========`);
+  Logger.log(`Display Name: ${serviceConfig.displayName}`);
+  Logger.log(`URL: ${serviceConfig.url}`);
+  Logger.log(`Enabled: ${serviceConfig.enabled}`);
+  Logger.log(`Message Thread ID: ${serviceConfig.messageThreadId}`);
+  Logger.log(`\n--- Fetching Announcements ---\n`);
+  
+  try {
+    const announcements = service.fetch();
+    Logger.log(`Found ${announcements.length} announcements\n`);
+    
+    for (let i = 0; i < announcements.length; i++) {
+      const announcement = announcements[i];
+      Logger.log(`\n[${i + 1}] Announcement ID: ${announcement.id}`);
+      Logger.log(`Title: ${announcement.title}`);
+      Logger.log(`Content: ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}`);
+      Logger.log(`Poster: ${announcement.poster || 'N/A'}`);
+      Logger.log(`Create Date: ${announcement.create_date || 'N/A'}`);
+      Logger.log(`URL: ${announcement.url || 'N/A'}`);
+      
+      Logger.log(`\n--- Telegram Message Preview ---`);
+      const message = service.buildMessage(announcement, serviceConfig);
+      Logger.log(message);
+      Logger.log(`--- End of Message ---\n`);
+    }
+    
+    Logger.log(`\n========== END DEBUG ==========\n`);
+    
+  } catch (e) {
+    Logger.log(`Error in debug: ${e.message}`);
+    Logger.log(`Stack: ${e.stack}`);
+  }
 }
 
 function setupTimeTrigger() {

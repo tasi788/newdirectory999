@@ -21,6 +21,28 @@ const CONFIG_SERVICES = [
     url: 'https://www.kkren.com.tw/',
     enabled: true,
     messageThreadId: 19
+  },
+  {
+    name: 'seednet',
+    displayName: 'Seednet',
+    url: 'https://service.seed.net.tw',
+    enabled: true,
+    messageThreadId: 108
+  },
+  {
+    name: 'elf',
+    displayName: '一路發',
+    url: 'https://www.elf.com.tw',
+    enabled: true,
+    messageThreadId: 105
+
+  },
+  {
+    name: 'fet',
+    displayName: '遠傳電信',
+    url: 'https://www.fetnet.net',
+    enabled: true,
+    messageThreadId: 93
   }
 ];
 

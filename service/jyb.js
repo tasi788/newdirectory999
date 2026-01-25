@@ -52,16 +52,4 @@ class JYBService extends ServiceInterface {
       return [];
     }
   }
-
-  stripHtml(html) {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
 }
