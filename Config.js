@@ -43,6 +43,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.fetnet.net',
     enabled: true,
     messageThreadId: 93
+  },
+  {
+    name: 'hinet',
+    displayName: '中華電信',
+    url: 'https://www.hinet.net',
+    enabled: true,
+    messageThreadId: 90
   }
 ];
 

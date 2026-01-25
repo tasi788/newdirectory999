@@ -70,13 +70,15 @@ function getServiceInstance(serviceName) {
       return new ElfService();
     case 'fet':
       return new FetService();
+    case 'hinet':
+      return new HinetService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'fet';
+  let serviceName = 'hinet';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -94,7 +96,7 @@ function skipService() {
 }
 
 function debugService() {
-  let serviceName = 'fet';
+  let serviceName = 'hinet';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
