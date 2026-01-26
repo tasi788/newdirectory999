@@ -50,6 +50,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.hinet.net',
     enabled: true,
     messageThreadId: 90
+  },
+  {
+    name: 'homeplus',
+    displayName: '中嘉寬頻',
+    url: 'https://www.homeplus.net.tw',
+    enabled: true,
+    messageThreadId: 134
   }
 ];
 

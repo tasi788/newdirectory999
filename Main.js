@@ -60,8 +60,6 @@ function main() {
 
 function getServiceInstance(serviceName) {
   switch(serviceName) {
-    case 'aaa':
-      return new AAAService();
     case 'jyb':
       return new JYBService();
     case 'seednet':
@@ -72,13 +70,15 @@ function getServiceInstance(serviceName) {
       return new FetService();
     case 'hinet':
       return new HinetService();
+    case 'homeplus':
+      return new HomeplusService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'hinet';
+  let serviceName = 'homeplus';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -96,7 +96,7 @@ function skipService() {
 }
 
 function debugService() {
-  let serviceName = 'hinet';
+  let serviceName = 'homeplus';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -130,6 +130,7 @@ function debugService() {
       Logger.log(`Poster: ${announcement.poster || 'N/A'}`);
       Logger.log(`Create Date: ${announcement.create_date || 'N/A'}`);
       Logger.log(`URL: ${announcement.url || 'N/A'}`);
+      Logger.log(`ID: ${announcement.id}`);
       
       Logger.log(`\n--- Telegram Message Preview ---`);
       const message = service.buildMessage(announcement, serviceConfig);
