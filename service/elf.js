@@ -41,8 +41,6 @@ class ElfService extends ServiceInterface {
         });
         
         announcements.push(announcement);
-        
-        if (announcements.length >= 10) break;
       }
       
       return announcements;

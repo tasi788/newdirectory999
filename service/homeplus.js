@@ -12,6 +12,7 @@ class HomeplusService extends ServiceInterface {
       
       const html = response.getContentText('UTF-8');
       const announcements = [];
+      const seenIds = new Set();
       
       const linkRegex = /<a[^>]*href="(https:\/\/www\.homeplus\.net\.tw\/cable\/topic\/system\/(\d+))"[^>]*>[\s\S]*?<h3[^>]*>([^<]+)<\/h3>/g;
       
@@ -21,21 +22,21 @@ class HomeplusService extends ServiceInterface {
         const id = match[2];
         const title = this.stripHtml(match[3]);
         
-        const detail = this.fetchAnnouncementContent(url);
+        if (seenIds.has(id)) continue;
+        seenIds.add(id);
         
         const announcement = this.formatAnnouncement({
           title: title,
-          content: detail.content,
+          content: '',
           poster: '',
-          create_date: detail.publishDate,
+          create_date: '',
           url: url,
           id: id
         });
         
-        announcements.push(announcement);
+        announcement.detailUrl = url;
         
-        if (announcements.length >= 10) break;
-        Utilities.sleep(500);
+        announcements.push(announcement);
       }
       
       return announcements;
@@ -44,6 +45,10 @@ class HomeplusService extends ServiceInterface {
       Logger.log(`Error fetching Homeplus announcements: ${e.message}`);
       return [];
     }
+  }
+  
+  fetchDetailContent(url) {
+    return this.fetchAnnouncementContent(url);
   }
 
   fetchAnnouncementContent(url) {

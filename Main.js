@@ -30,9 +30,32 @@ function main() {
       Logger.log(`${newAnnouncements.length} new announcements for ${serviceConfig.name}`);
       
       for (const announcement of newAnnouncements) {
+        if (typeof service.fetchDetailContent === 'function') {
+          const detailKey = announcement.pageId || announcement.detailUrl;
+          if (detailKey) {
+            const detail = service.fetchDetailContent(detailKey);
+            if (detail.images) announcement.images = detail.images;
+            if (detail.content) announcement.content = detail.content;
+            if (detail.publishDate) announcement.create_date = detail.publishDate;
+            Utilities.sleep(300);
+          }
+        }
+        
         const message = service.buildMessage(announcement, serviceConfig);
         
-        if (announcement.poster) {
+        if (announcement.images && announcement.images.length > 1) {
+          telegram.sendMediaGroup(
+            announcement.images,
+            message,
+            serviceConfig.messageThreadId
+          );
+        } else if (announcement.images && announcement.images.length === 1) {
+          telegram.sendPhoto(
+            announcement.images[0],
+            message,
+            serviceConfig.messageThreadId
+          );
+        } else if (announcement.poster) {
           telegram.sendPhoto(
             announcement.poster,
             message,
@@ -72,13 +95,15 @@ function getServiceInstance(serviceName) {
       return new HinetService();
     case 'homeplus':
       return new HomeplusService();
+    case 'costco':
+      return new CostcoService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'homeplus';
+  let serviceName = 'costco';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -93,6 +118,34 @@ function skipService() {
   
   db.skipService(serviceName, ids);
   Logger.log(`Skip completed for ${serviceName}`);
+}
+
+function skipAllServices() {
+  const CONFIG = getConfig();
+  const db = new Database(CONFIG.SHEET_ID);
+  
+  for (const serviceConfig of CONFIG.SERVICES) {
+    if (!serviceConfig.enabled) continue;
+    
+    const service = getServiceInstance(serviceConfig.name);
+    if (!service) {
+      Logger.log(`Service ${serviceConfig.name} not found`);
+      continue;
+    }
+    
+    try {
+      const ids = service.skip();
+      Logger.log(`Skipping ${ids.length} announcements for ${serviceConfig.name}`);
+      db.skipService(serviceConfig.name, ids);
+      Logger.log(`Skip completed for ${serviceConfig.name}`);
+    } catch (e) {
+      Logger.log(`Error skipping ${serviceConfig.name}: ${e.message}`);
+    }
+    
+    Utilities.sleep(500);
+  }
+  
+  Logger.log('All services skip completed');
 }
 
 function debugService() {

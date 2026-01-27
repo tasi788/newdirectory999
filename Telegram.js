@@ -110,4 +110,53 @@ class Telegram {
       return null;
     }
   }
+
+  sendMediaGroup(mediaUrls, caption = '', messageThreadId = null) {
+    if (!mediaUrls || mediaUrls.length === 0) {
+      return null;
+    }
+    
+    const media = mediaUrls.map((url, index) => {
+      const item = {
+        type: 'photo',
+        media: url
+      };
+      if (index === 0 && caption) {
+        item.caption = caption;
+        item.parse_mode = 'HTML';
+      }
+      return item;
+    });
+    
+    const payload = {
+      chat_id: this.chatId,
+      media: media
+    };
+    
+    if (messageThreadId) {
+      payload.message_thread_id = messageThreadId;
+    }
+    
+    const options = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+    
+    try {
+      const response = UrlFetchApp.fetch(`${this.baseUrl}/sendMediaGroup`, options);
+      const result = JSON.parse(response.getContentText());
+      
+      if (!result.ok) {
+        Logger.log(`Telegram sendMediaGroup error: ${result.description}`);
+        return null;
+      }
+      
+      return result.result;
+    } catch (e) {
+      Logger.log(`Telegram sendMediaGroup exception: ${e.message}`);
+      return null;
+    }
+  }
 }

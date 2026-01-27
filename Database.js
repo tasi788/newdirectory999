@@ -46,9 +46,9 @@ class Database {
     }
     
     const entries = Object.entries(existingData);
-    if (entries.length > 50) {
+    if (entries.length > 100) {
       entries.sort((a, b) => new Date(b[1]) - new Date(a[1]));
-      existingData = Object.fromEntries(entries.slice(0, 50));
+      existingData = Object.fromEntries(entries.slice(0, 100));
     }
     
     const jsonData = JSON.stringify(existingData);

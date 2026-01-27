@@ -53,8 +53,6 @@ class HinetService extends ServiceInterface {
           });
           
           announcements.push(announcement);
-          
-          if (announcements.length >= 10) break;
         }
       }
       
