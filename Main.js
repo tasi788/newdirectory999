@@ -151,7 +151,7 @@ function skipAllServices() {
 }
 
 function debugService() {
-  let serviceName = 'taiwanmobile';
+  let serviceName = 'costco';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -208,6 +208,104 @@ function debugService() {
     
   } catch (e) {
     Logger.log(`Error in debug: ${e.message}`);
+    Logger.log(`Stack: ${e.stack}`);
+  }
+}
+
+function debugSend() {
+  const serviceName = 'costco';
+  const debugChatId = '5440674042';
+  
+  const CONFIG = getConfig();
+  const service = getServiceInstance(serviceName);
+  
+  if (!service) {
+    Logger.log(`Service ${serviceName} not found`);
+    return;
+  }
+  
+  const serviceConfig = CONFIG.SERVICES.find(s => s.name === serviceName);
+  if (!serviceConfig) {
+    Logger.log(`Service config for ${serviceName} not found`);
+    return;
+  }
+  
+  const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, debugChatId);
+  
+  Logger.log(`\n========== DEBUG SEND: ${serviceName} ==========`);
+  Logger.log(`Sending to debug chat: ${debugChatId}`);
+  
+  try {
+    const announcements = service.fetch();
+    Logger.log(`Found ${announcements.length} announcements`);
+    
+    if (announcements.length === 0) {
+      Logger.log('No announcements to send');
+      return;
+    }
+    
+    for (let i = 0; i < announcements.length; i++) {
+      const announcement = announcements[i];
+      Logger.log(`\n--- [${i + 1}/${announcements.length}] Processing: ${announcement.title} ---`);
+      
+      if (typeof service.fetchDetailContent === 'function') {
+        const detailKey = announcement.pageId || announcement.detailUrl || announcement.detailId;
+        if (detailKey) {
+          Logger.log(`Fetching detail content with key: ${detailKey}`);
+          const detail = service.fetchDetailContent(detailKey);
+          Logger.log(`Detail result: ${JSON.stringify(detail)}`);
+          if (detail.content) announcement.content = detail.content;
+          if (detail.publishDate) announcement.create_date = detail.publishDate;
+          if (detail.images) {
+            announcement.images = detail.images;
+            Logger.log(`Images found: ${detail.images.length}`);
+            for (let j = 0; j < detail.images.length; j++) {
+              Logger.log(`  Image ${j + 1}: ${detail.images[j]}`);
+            }
+          }
+        }
+      }
+      
+      const message = service.buildMessage(announcement, serviceConfig);
+      Logger.log(`\nMessage:\n${message}`);
+      
+      if (announcement.images && announcement.images.length > 1) {
+        Logger.log(`\nSending as MediaGroup (${announcement.images.length} images)`);
+        const result = telegram.sendMediaGroup(
+          announcement.images,
+          message,
+          null
+        );
+        Logger.log(`MediaGroup result: ${JSON.stringify(result)}`);
+      } else if (announcement.images && announcement.images.length === 1) {
+        Logger.log(`\nSending as Photo (1 image): ${announcement.images[0]}`);
+        const result = telegram.sendPhoto(
+          announcement.images[0],
+          message,
+          null
+        );
+        Logger.log(`Photo result: ${JSON.stringify(result)}`);
+      } else if (announcement.poster) {
+        Logger.log(`\nSending as Photo (poster): ${announcement.poster}`);
+        const result = telegram.sendPhoto(
+          announcement.poster,
+          message,
+          null
+        );
+        Logger.log(`Photo result: ${JSON.stringify(result)}`);
+      } else {
+        Logger.log(`\nSending as Text only`);
+        const result = telegram.sendMessage(message, null);
+        Logger.log(`Message result: ${JSON.stringify(result)}`);
+      }
+      
+      Utilities.sleep(1000);
+    }
+    
+    Logger.log(`\n========== END DEBUG SEND ==========`);
+    
+  } catch (e) {
+    Logger.log(`Error: ${e.message}`);
     Logger.log(`Stack: ${e.stack}`);
   }
 }
