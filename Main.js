@@ -31,7 +31,7 @@ function main() {
       
       for (const announcement of newAnnouncements) {
         if (typeof service.fetchDetailContent === 'function') {
-          const detailKey = announcement.pageId || announcement.detailUrl;
+          const detailKey = announcement.pageId || announcement.detailUrl || announcement.detailId;
           if (detailKey) {
             const detail = service.fetchDetailContent(detailKey);
             if (detail.images) announcement.images = detail.images;
@@ -181,7 +181,7 @@ function debugService() {
       const announcement = announcements[i];
       
       if (typeof service.fetchDetailContent === 'function') {
-        const detailKey = announcement.pageId || announcement.detailUrl;
+        const detailKey = announcement.pageId || announcement.detailUrl || announcement.detailId;
         if (detailKey) {
           const detail = service.fetchDetailContent(detailKey);
           if (detail.content) announcement.content = detail.content;

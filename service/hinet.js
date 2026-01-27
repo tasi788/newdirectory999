@@ -41,16 +41,16 @@ class HinetService extends ServiceInterface {
           const idMatch = detailUrl.match(/id=([^&]+)/);
           const id = idMatch ? idMatch[1] : this.generateMD5(title + '+' + publishDate);
           
-          const detailContent = id ? this.fetchDetailContent(id) : '';
-          
           const announcement = this.formatAnnouncement({
             title: title,
-            content: detailContent || (endDate ? `公告期間：${publishDate} ~ ${endDate}` : ''),
+            content: endDate ? `公告期間：${publishDate} ~ ${endDate}` : '',
             poster: '',
             create_date: publishDate,
             url: detailUrl,
             id: id
           });
+          
+          announcement.detailId = id;
           
           announcements.push(announcement);
         }
@@ -86,7 +86,7 @@ class HinetService extends ServiceInterface {
       
       const jsonMatch = text.match(/jsonpCallback\((.+)\);?\s*$/s);
       if (!jsonMatch) {
-        return '';
+        return { content: '' };
       }
       
       const data = JSON.parse(jsonMatch[1]);
@@ -97,16 +97,16 @@ class HinetService extends ServiceInterface {
         const descMatch = html.match(/<li>說明：<span>([^<]+)<\/span><\/li>/);
         if (descMatch) {
           const content = this.decodeHtmlEntities(descMatch[1]);
-          return this.stripHtml(content).substring(0, 500);
+          return { content: this.stripHtml(content).substring(0, 500) };
         }
         
-        return this.stripHtml(this.decodeHtmlEntities(html)).substring(0, 500);
+        return { content: this.stripHtml(this.decodeHtmlEntities(html)).substring(0, 500) };
       }
       
-      return '';
+      return { content: '' };
     } catch (e) {
       Logger.log(`Error fetching HiNet detail content: ${e.message}`);
-      return '';
+      return { content: '' };
     }
   }
 
