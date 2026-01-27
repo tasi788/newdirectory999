@@ -32,8 +32,11 @@ class ServiceInterface {
       serviceName = `<a href="${serviceUrl}">${displayName}</a>`;
     }
     
-    let message = `<b>📢 ${serviceName} | ${announcement.title}</b>\n\n`;
-    message += `${announcement.content}\n`;
+    let message = `<b>📢 ${serviceName} | ${announcement.title}</b>\n`;
+    
+    if (announcement.content && announcement.content.trim()) {
+      message += `\n${announcement.content}\n`;
+    }
     
     if (announcement.create_date) {
       message += `\n📅 發布日期: ${announcement.create_date}`;
