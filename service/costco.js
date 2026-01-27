@@ -41,10 +41,10 @@ class CostcoService extends ServiceInterface {
         return [];
       }
       
-      const rowRegex = /<td[^>]*class="Date"[^>]*>(\d{4}\/\d{2}\/\d{2})<\/td>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
+      const linkRowRegex = /<td[^>]*class="Date"[^>]*>(\d{4}\/\d{2}\/\d{2})<\/td>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
       
       let match;
-      while ((match = rowRegex.exec(html)) !== null) {
+      while ((match = linkRowRegex.exec(html)) !== null) {
         const publishDate = match[1];
         const href = match[2];
         const title = this.stripHtml(match[3]);
@@ -62,6 +62,29 @@ class CostcoService extends ServiceInterface {
         });
         
         announcement.pageId = pageId;
+        
+        announcements.push(announcement);
+      }
+      
+      const textRowRegex = /<td[^>]*class="Date"[^>]*>(\d{4}\/\d{2}\/\d{2})<\/td>[\s\S]*?<p[^>]*class="footerH3"[^>]*>([^<]+)<\/p>/g;
+      
+      while ((match = textRowRegex.exec(html)) !== null) {
+        const publishDate = match[1];
+        const content = this.stripHtml(match[2]);
+        
+        const id = this.generateMD5(content + publishDate);
+        
+        const existingIds = announcements.map(a => a.id);
+        if (existingIds.includes(id)) continue;
+        
+        const announcement = this.formatAnnouncement({
+          title: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+          content: content,
+          poster: '',
+          create_date: publishDate,
+          url: '',
+          id: id
+        });
         
         announcements.push(announcement);
       }
