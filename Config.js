@@ -64,6 +64,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.costco.com.tw',
     enabled: true,
     messageThreadId: 267
+  },
+  {
+    name: 'taiwanmobile',
+    displayName: '台灣大哥大',
+    url: 'https://www.taiwanmobile.com',
+    enabled: true,
+    messageThreadId: 317
   }
 ];
 

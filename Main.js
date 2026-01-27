@@ -97,13 +97,15 @@ function getServiceInstance(serviceName) {
       return new HomeplusService();
     case 'costco':
       return new CostcoService();
+    case 'taiwanmobile':
+      return new TaiwanMobileService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'costco';
+  let serviceName = 'taiwanmobile';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -149,7 +151,7 @@ function skipAllServices() {
 }
 
 function debugService() {
-  let serviceName = 'homeplus';
+  let serviceName = 'taiwanmobile';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -177,6 +179,17 @@ function debugService() {
     
     for (let i = 0; i < announcements.length; i++) {
       const announcement = announcements[i];
+      
+      if (typeof service.fetchDetailContent === 'function') {
+        const detailKey = announcement.pageId || announcement.detailUrl;
+        if (detailKey) {
+          const detail = service.fetchDetailContent(detailKey);
+          if (detail.content) announcement.content = detail.content;
+          if (detail.publishDate) announcement.create_date = detail.publishDate;
+          if (detail.images) announcement.images = detail.images;
+        }
+      }
+      
       Logger.log(`\n[${i + 1}] Announcement ID: ${announcement.id}`);
       Logger.log(`Title: ${announcement.title}`);
       Logger.log(`Content: ${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}`);
