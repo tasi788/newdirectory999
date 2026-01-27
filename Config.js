@@ -57,6 +57,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.homeplus.net.tw',
     enabled: true,
     messageThreadId: 134
+  },
+  {
+    name: 'costco',
+    displayName: '好市多',
+    url: 'https://www.costco.com.tw',
+    enabled: true,
+    messageThreadId: 267
   }
 ];
 
