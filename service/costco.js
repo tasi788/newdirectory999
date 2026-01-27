@@ -103,6 +103,36 @@ class CostcoService extends ServiceInterface {
         }
       }
       
+      if (images.length === 0 && data.contentSlots && data.contentSlots.contentSlot) {
+        const seenImages = new Set();
+        for (const slot of data.contentSlots.contentSlot) {
+          if (slot.components && slot.components.component) {
+            for (const comp of slot.components.component) {
+              if (comp.content) {
+                const imgRegex = /src="([^"]*mediapermalink\/[^"]+)"/g;
+                let match;
+                while ((match = imgRegex.exec(comp.content)) !== null) {
+                  const imgUrl = match[1];
+                  if (!imgUrl.includes('social_icon') && 
+                      !imgUrl.includes('appicon') && 
+                      !imgUrl.includes('footericon') &&
+                      !imgUrl.includes('GOLDSTAR') &&
+                      !imgUrl.includes('BUSINESS') &&
+                      !imgUrl.includes('Executive') &&
+                      !imgUrl.includes('icon_membership')) {
+                    const fullUrl = imgUrl.startsWith('http') ? imgUrl : this.baseUrl + imgUrl;
+                    if (!seenImages.has(fullUrl)) {
+                      seenImages.add(fullUrl);
+                      images.push(fullUrl);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
       return { images: images };
       
     } catch (e) {
