@@ -34,8 +34,13 @@ class ServiceInterface {
     
     let message = `<b>📢 ${serviceName} | ${announcement.title}</b>\n`;
     
-    if (announcement.content && announcement.content.trim()) {
-      message += `\n${announcement.content}\n`;
+    const content = announcement.content ? announcement.content.trim() : '';
+    if (content) {
+      if (content.length > 250) {
+        message += `\n<blockquote expandable>${content}</blockquote>\n`;
+      } else {
+        message += `\n${content}\n`;
+      }
     }
     
     if (announcement.create_date) {

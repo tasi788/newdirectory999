@@ -99,13 +99,15 @@ function getServiceInstance(serviceName) {
       return new CostcoService();
     case 'taiwanmobile':
       return new TaiwanMobileService();
+    case 'cpc':
+      return new CPCService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'taiwanmobile';
+  let serviceName = 'cpc';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -151,7 +153,7 @@ function skipAllServices() {
 }
 
 function debugService() {
-  let serviceName = 'costco';
+  let serviceName = 'cpc';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -213,7 +215,7 @@ function debugService() {
 }
 
 function debugSend() {
-  const serviceName = 'costco';
+  const serviceName = 'cpc';
   const debugChatId = '5440674042';
   
   const CONFIG = getConfig();

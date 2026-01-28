@@ -71,6 +71,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.taiwanmobile.com',
     enabled: true,
     messageThreadId: 317
+  },
+  {
+    name: 'cpc',
+    displayName: '台灣中油',
+    url: 'https://www.cpc.com.tw',
+    enabled: true,
+    messageThreadId: 439
   }
 ];
 
