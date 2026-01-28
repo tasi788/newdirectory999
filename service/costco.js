@@ -66,11 +66,16 @@ class CostcoService extends ServiceInterface {
         announcements.push(announcement);
       }
       
-      const textRowRegex = /<td[^>]*class="Date"[^>]*>(\d{4}\/\d{2}\/\d{2})<\/td>[\s\S]*?<p[^>]*class="footerH3"[^>]*>([^<]+)<\/p>/g;
+      const textRowRegex = /<td[^>]*class="Date"[^>]*>(\d{4}\/\d{2}\/\d{2})<\/td>[\s\S]*?<p[^>]*class="footerH3"[^>]*>([\s\S]*?)<\/p>/g;
       
       while ((match = textRowRegex.exec(html)) !== null) {
         const publishDate = match[1];
-        const content = this.stripHtml(match[2]);
+        const rawContent = match[2];
+        
+        if (rawContent.includes('<a')) continue;
+        
+        const content = this.stripHtml(rawContent);
+        if (!content.trim()) continue;
         
         const id = this.generateMD5(content + publishDate);
         
