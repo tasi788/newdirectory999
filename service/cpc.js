@@ -4,24 +4,22 @@ class CPCService extends ServiceInterface {
     this.baseUrl = 'https://www.cpc.com.tw';
     this.sources = [
       {
-        sn: 'ABBF62618F53F8DE',
+        sn: '78702647C7A5B61B',
         typeName: '新聞稿',
-        hashtag: '#新聞稿'
+        hashtag: '#新聞稿',
+        maxItems: 30
       },
       {
-        sn: 'D222AB2C227DC406',
+        sn: '594FC080B4D63D73',
         typeName: '最新訊息',
-        hashtag: '#最新訊息'
+        hashtag: '#最新訊息',
+        maxItems: 30
       },
       {
-        sn: '82FC652523030D44',
+        sn: 'CF5DF99964D9DB8E',
         typeName: '重大政策',
-        hashtag: '#重大政策'
-      },
-      {
-        sn: '460A00BC234B1923',
-        typeName: '就業資訊',
-        hashtag: '#就業資訊'
+        hashtag: '#重大政策',
+        maxItems: 30
       }
     ];
   }
@@ -37,54 +35,51 @@ class CPCService extends ServiceInterface {
           muteHttpExceptions: true
         });
 
-        let content = response.getContentText('UTF-8');
+        const content = response.getContentText('UTF-8');
         if (!content) {
           continue;
         }
 
-        content = content.replace(/^[\uFEFF\u200B]+/, '');
-
-        let document;
+        let data;
         try {
-          document = XmlService.parse(content);
+          data = JSON.parse(content);
         } catch (parseError) {
-          Logger.log(`Failed to parse CPC RSS (${source.sn}): ${parseError.message}`);
+          Logger.log(`Failed to parse CPC JSON (${source.sn}): ${parseError.message}`);
           continue;
         }
 
-        const root = document.getRootElement();
-        const channel = this.findChild(root, 'channel');
-        if (!channel) {
+        if (!Array.isArray(data)) {
           continue;
         }
 
-        const items = this.getChildrenByName(channel, 'item');
-        for (const item of items) {
-          const title = this.getChildText(item, 'title');
+        const itemsToProcess = data.slice(0, source.maxItems || 30);
+
+        for (const item of itemsToProcess) {
+          const title = item.title || item.Title;
           if (!title) {
             continue;
           }
 
-          const link = this.getChildText(item, 'link');
-          const descriptionRaw = this.getChildText(item, 'description');
-          const newsId = this.getChildText(item, 'NewsID') || this.getChildText(item, 'guid');
-          const pubDateRaw = this.getChildText(item, 'pubDate') || this.getChildText(item, 'dc:date');
-          const keywordsRaw = this.getChildText(item, 'keywords');
+          const link = item.Source || item.Link || '';
+          const htmlContent = item['內容'] || item.Content || '';
+          const pubDateRaw = item['刊登日期'] || item.PublishDate || '';
+          const relatedImages = item['相關圖片'] || item.RelatedImages || [];
 
-          const announcementId = newsId ? `${source.sn}_${newsId}` : this.generateMD5(`${source.sn}|${title}|${pubDateRaw || ''}`);
+          const newsId = this.extractNewsId(link);
+          const announcementId = newsId ? `${source.sn}_${newsId}` : this.generateMD5(`${source.sn}|${title}|${pubDateRaw}`);
+          
           if (seenIds.has(announcementId)) {
             continue;
           }
           seenIds.add(announcementId);
 
           const publishDate = this.formatDate(pubDateRaw);
-
-          const description = descriptionRaw ? this.stripHtml(descriptionRaw).substring(0, 500) : '';
-          const hashtags = this.buildHashtags(source.hashtag, keywordsRaw);
+          const processedContent = this.processHtmlContent(htmlContent);
+          const hashtags = this.buildHashtags(source.hashtag);
 
           const contentParts = [];
-          if (description) {
-            contentParts.push(description);
+          if (processedContent) {
+            contentParts.push(processedContent);
           }
           if (hashtags.length > 0) {
             contentParts.push(hashtags.join(' '));
@@ -98,7 +93,7 @@ class CPCService extends ServiceInterface {
             id: announcementId
           });
 
-          const images = this.extractImageUrls(item);
+          const images = this.extractImagesFromArray(relatedImages);
           if (images.length > 0) {
             announcement.images = images;
           }
@@ -123,44 +118,77 @@ class CPCService extends ServiceInterface {
     }
   }
 
-  buildHashtags(baseHashtag, keywordsRaw) {
+  buildHashtags(baseHashtag) {
     const hashtags = [];
-
     if (baseHashtag) {
       hashtags.push(baseHashtag);
     }
-
-    if (keywordsRaw) {
-      const parts = keywordsRaw.split(/[，,]+/);
-      for (const part of parts) {
-        const trimmed = part.trim();
-        if (!trimmed) continue;
-        const hashtag = `#${trimmed.replace(/\s+/g, '')}`;
-        if (!hashtags.includes(hashtag)) {
-          hashtags.push(hashtag);
-        }
-      }
-    }
-
     return hashtags;
   }
 
-  extractImageUrls(item) {
+  extractImagesFromArray(relatedImages) {
     const images = [];
-    const relateImages = this.findChild(item, 'RelateImages');
-    if (!relateImages) {
+    if (!Array.isArray(relatedImages)) {
       return images;
     }
 
-    const imageItems = this.getChildrenByName(relateImages, 'ImageItem');
-    for (const imageItem of imageItems) {
-      const imageUrl = this.getChildText(imageItem, 'ImageUrl');
-      if (imageUrl) {
-        images.push(imageUrl);
+    for (const imgStr of relatedImages) {
+      const match = imgStr.match(/\((https?:\/\/[^)]+)\)/);
+      if (match) {
+        images.push(match[1]);
       }
     }
 
     return images;
+  }
+
+  extractNewsId(link) {
+    if (!link) return null;
+    const match = link.match(/[?&]s=(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  processHtmlContent(htmlContent) {
+    if (!htmlContent) return '';
+
+    let text = htmlContent;
+    const tablePlaceholders = [];
+
+    text = text.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match, tableContent) => {
+      const tableText = this.convertTableToText(tableContent);
+      const placeholder = `__TABLE_${tablePlaceholders.length}__`;
+      tablePlaceholders.push(tableText);
+      return `\n\n${placeholder}\n\n`;
+    });
+
+    text = this.stripHtml(text);
+    text = text.replace(/\s+/g, ' ').trim();
+
+    for (let i = 0; i < tablePlaceholders.length; i++) {
+      text = text.replace(`__TABLE_${i}__`, `\n${tablePlaceholders[i]}\n`);
+    }
+
+    return text.substring(0, 500);
+  }
+
+  convertTableToText(tableHtml) {
+    let result = '';
+
+    const rows = tableHtml.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
+    
+    for (const row of rows) {
+      const cells = row.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
+      const cellTexts = cells.map(cell => {
+        const cleaned = cell.replace(/<[^>]+>/g, '').trim();
+        return cleaned || '';
+      }).filter(t => t);
+
+      if (cellTexts.length > 0) {
+        result += cellTexts.join(' | ') + '\n';
+      }
+    }
+
+    return result.trim();
   }
 
   formatDate(pubDateRaw) {
@@ -177,42 +205,6 @@ class CPCService extends ServiceInterface {
     } catch (e) {
       return null;
     }
-  }
-
-  getChildrenByName(element, name) {
-    return element.getChildren().filter(child => child.getName().toLowerCase() === name.toLowerCase());
-  }
-
-  findChild(element, name) {
-    const lowerName = name.toLowerCase();
-    const children = element.getChildren();
-    for (const child of children) {
-      if (child.getName().toLowerCase() === lowerName) {
-        return child;
-      }
-    }
-    return null;
-  }
-
-  getChildText(element, name) {
-    if (!element) {
-      return '';
-    }
-
-    const lowerName = name.toLowerCase();
-
-    for (const child of element.getChildren()) {
-      if (child.getName().toLowerCase() === lowerName) {
-        return child.getText().trim();
-      }
-    }
-
-    if (name.includes(':')) {
-      const [, actual] = name.split(':');
-      return this.getChildText(element, actual);
-    }
-
-    return '';
   }
 
   generateMD5(text) {
