@@ -101,13 +101,15 @@ function getServiceInstance(serviceName) {
       return new TaiwanMobileService();
     case 'cpc':
       return new CPCService();
+    case 'smc':
+      return new SMCService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'cpc';
+  let serviceName = 'smc';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -153,7 +155,7 @@ function skipAllServices() {
 }
 
 function debugService() {
-  let serviceName = 'cpc';
+  let serviceName = 'smc';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -215,7 +217,7 @@ function debugService() {
 }
 
 function debugSend() {
-  const serviceName = 'cpc';
+  const serviceName = 'smc';
   const debugChatId = '5440674042';
   
   const CONFIG = getConfig();

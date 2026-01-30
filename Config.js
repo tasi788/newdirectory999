@@ -78,6 +78,13 @@ const CONFIG_SERVICES = [
     url: 'https://www.cpc.com.tw',
     enabled: true,
     messageThreadId: 439
+  },
+  {
+    name: 'smc',
+    displayName: '台灣海纜動態',
+    url: 'https://smc.peering.tw',
+    enabled: true,
+    messageThreadId: 751
   }
 ];
 
