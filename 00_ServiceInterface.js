@@ -13,14 +13,24 @@ class ServiceInterface {
 
   formatAnnouncement(data) {
     return {
-      title: data.title || '',
-      content: data.content || '',
+      title: this.escapeHtml(data.title || ''),
+      content: this.escapeHtml(data.content || ''),
       poster: data.poster || '',
       create_date: data.create_date || null,
       service: this.serviceName,
       url: data.url || '',
       id: data.id || ''
     };
+  }
+
+  escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   buildMessage(announcement, serviceConfig) {
