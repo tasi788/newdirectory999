@@ -103,13 +103,15 @@ function getServiceInstance(serviceName) {
       return new CPCService();
     case 'smc':
       return new SMCService();
+    case 'tncfd':
+      return new TncfdService();
     default:
       return null;
   }
 }
 
 function skipService() {
-  let serviceName = 'smc';
+  let serviceName = 'tncfd';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -155,7 +157,7 @@ function skipAllServices() {
 }
 
 function debugService() {
-  let serviceName = 'smc';
+  let serviceName = 'tncfd';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
@@ -217,7 +219,7 @@ function debugService() {
 }
 
 function debugSend() {
-  const serviceName = 'smc';
+  const serviceName = 'tncfd';
   const debugChatId = '5440674042';
   
   const CONFIG = getConfig();

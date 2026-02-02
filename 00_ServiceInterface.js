@@ -65,15 +65,43 @@ class ServiceInterface {
   }
 
   stripHtml(html) {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
-      .replace(/&amp;/g, '&')
-      .replace(/\s+/g, ' ')
+    let text = html
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
       .trim();
+      
+    // Decode HTML entities
+    return text.replace(/&([a-zA-Z0-9#]+);/g, (match, entity) => {
+      // Handle numeric entities
+      if (entity.startsWith('#')) {
+        const code = entity.charAt(1).toLowerCase() === 'x' 
+          ? parseInt(entity.substring(2), 16) 
+          : parseInt(entity.substring(1), 10);
+        return String.fromCharCode(code);
+      }
+      
+      // Handle named entities
+      const entities = {
+        'nbps': ' ', // typo tolerance if needed, but standard is nbsp
+        'nbsp': ' ',
+        'amp': '&',
+        'lt': '<',
+        'gt': '>',
+        'quot': '"',
+        'apos': "'",
+        'rdquo': '”',
+        'ldquo': '“',
+        'rsquo': '’',
+        'lsquo': '‘',
+        'ndash': '–',
+        'mdash': '—',
+        'hellip': '…',
+        'copy': '©',
+        'reg': '®',
+        'trade': '™',
+        'deg': '°'
+      };
+      
+      return entities[entity] || match;
+    });
   }
 }
