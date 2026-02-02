@@ -4,11 +4,15 @@ function getConfig() {
   const botToken = scriptProperties.getProperty('TELEGRAM_BOT_TOKEN');
   const chatId = scriptProperties.getProperty('TELEGRAM_CHAT_ID');
   const sheetId = scriptProperties.getProperty('SHEET_ID');
+  const proxyUrl = scriptProperties.getProperty('PROXY_URL');
+  const basicAuth = scriptProperties.getProperty('BASIC_AUTH');
   
   return {
     TELEGRAM_BOT_TOKEN: botToken,
     TELEGRAM_CHAT_ID: chatId,
     SHEET_ID: sheetId,
+    PROXY_URL: proxyUrl,
+    BASIC_AUTH: basicAuth,
     
     SERVICES: CONFIG_SERVICES
   };
@@ -85,6 +89,13 @@ const CONFIG_SERVICES = [
     url: 'https://smc.peering.tw',
     enabled: true,
     messageThreadId: 751
+  },
+  {
+    name: 'tncfd',
+    displayName: '台南消防出勤',
+    url: 'https://119dts.tncfd.gov.tw/DTS/caselist/html',
+    enabled: true,
+    messageThreadId: 965
   }
 ];
 
