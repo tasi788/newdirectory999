@@ -21,7 +21,7 @@ class Database {
     return null;
   }
 
-  setServiceData(serviceName, newIds) {
+  setServiceData(serviceName, newIds, pruneSeparator) {
     const data = this.sheet.getDataRange().getValues();
     let rowIndex = -1;
     
@@ -38,6 +38,32 @@ class Database {
         existingData = JSON.parse(data[rowIndex - 1][1] || '{}');
       } catch (e) {
         Logger.log(`Error parsing existing data for ${serviceName}: ${e.message}`);
+      }
+    }
+    
+    // Pruning logic
+    if (pruneSeparator) {
+      for (const newId of Object.keys(newIds)) {
+        // newId format assumed: PREFIX_STATUS or PREFIX
+        const idParts = newId.split(pruneSeparator);
+        // If ID doesn't contain separator, perform exact match check on existing
+        // If ID contains separator, the prefix is the first part
+        const prefix = idParts[0];
+        
+        // Remove existing keys that match the prefix
+        for (const existingId of Object.keys(existingData)) {
+          // Check for exact prefix match (e.g. 'c81e7' existing when 'c81e7_resolved' new comes in)
+          if (existingId === prefix) {
+            delete existingData[existingId];
+            continue;
+          }
+          
+          // Check for prefix + separator match (e.g. 'case1_dispatch' existing when 'case1_arrived' new comes in)
+          if (existingId.startsWith(prefix + pruneSeparator)) {
+            delete existingData[existingId];
+            continue;
+          }
+        }
       }
     }
     

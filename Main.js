@@ -4,114 +4,133 @@ function main() {
   const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
   
   for (const serviceConfig of CONFIG.SERVICES) {
-    if (!serviceConfig.enabled) {
+    processService(serviceConfig, db, telegram);
+  }
+  
+  Logger.log('Main execution completed');
+}
+
+function runFrequentServices() {
+  const CONFIG = getConfig();
+  const db = new Database(CONFIG.SHEET_ID);
+  const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
+  
+  // List of services that run every 5 minutes
+  const frequentServices = ['tncfd'];
+  
+  Logger.log('Starting Frequent Services execution');
+  
+  for (const serviceName of frequentServices) {
+    const serviceConfig = CONFIG.SERVICES.find(s => s.name === serviceName);
+    if (!serviceConfig) {
+      Logger.log(`Service config for ${serviceName} not found`);
       continue;
     }
     
-    try {
-      const service = getServiceInstance(serviceConfig.name);
-      if (!service) {
-        Logger.log(`Service ${serviceConfig.name} not found`);
-        continue;
-      }
-      
-      Logger.log(`Processing service: ${serviceConfig.name}`);
-      
-      const announcements = service.fetch();
-      Logger.log(`Found ${announcements.length} announcements for ${serviceConfig.name}`);
-      
-      const newAnnouncements = [];
-      for (const announcement of announcements) {
-        if (!db.hasId(serviceConfig.name, announcement.id)) {
-          newAnnouncements.push(announcement);
-        }
-      }
-      
-      Logger.log(`${newAnnouncements.length} new announcements for ${serviceConfig.name}`);
-      
-      for (const announcement of newAnnouncements) {
-        if (typeof service.fetchDetailContent === 'function') {
-          const detailKey = announcement.pageId || announcement.detailUrl || announcement.detailId;
-          if (detailKey) {
-            const detail = service.fetchDetailContent(detailKey);
-            if (detail.images) announcement.images = detail.images;
-            if (detail.content) announcement.content = detail.content;
-            if (detail.publishDate) announcement.create_date = detail.publishDate;
-            Utilities.sleep(300);
-          }
-        }
-        
-        const message = service.buildMessage(announcement, serviceConfig);
-        
-        if (announcement.images && announcement.images.length > 1) {
-          telegram.sendMediaGroup(
-            announcement.images,
-            message,
-            serviceConfig.messageThreadId
-          );
-        } else if (announcement.images && announcement.images.length === 1) {
-          telegram.sendPhoto(
-            announcement.images[0],
-            message,
-            serviceConfig.messageThreadId
-          );
-        } else if (announcement.poster) {
-          telegram.sendPhoto(
-            announcement.poster,
-            message,
-            serviceConfig.messageThreadId
-          );
-        } else {
-          telegram.sendMessage(message, serviceConfig.messageThreadId);
-        }
-        
-        const dateStr = announcement.create_date || new Date().toISOString();
-        db.setServiceData(serviceConfig.name, {
-          [announcement.id]: dateStr
-        });
-        
-        Utilities.sleep(1000);
-      }
-      
-    } catch (e) {
-      Logger.log(`Error processing service ${serviceConfig.name}: ${e.message}`);
+    processService(serviceConfig, db, telegram);
+  }
+  
+  Logger.log('Frequent Services execution completed');
+}
+
+function processService(serviceConfig, db, telegram) {
+  if (!serviceConfig.enabled) {
+    return;
+  }
+  
+  try {
+    const service = getServiceInstance(serviceConfig.name);
+    if (!service) {
+      Logger.log(`Service ${serviceConfig.name} not found`);
+      return;
     }
+    
+    Logger.log(`Processing service: ${serviceConfig.name}`);
+    
+    const announcements = service.fetch();
+    Logger.log(`Found ${announcements.length} announcements for ${serviceConfig.name}`);
+    
+    const newAnnouncements = [];
+    for (const announcement of announcements) {
+      if (!db.hasId(serviceConfig.name, announcement.id)) {
+        newAnnouncements.push(announcement);
+      }
+    }
+    
+    Logger.log(`${newAnnouncements.length} new announcements for ${serviceConfig.name}`);
+    
+    for (const announcement of newAnnouncements) {
+      if (typeof service.fetchDetailContent === 'function') {
+        const detailKey = announcement.pageId || announcement.detailUrl || announcement.detailId;
+        if (detailKey) {
+          const detail = service.fetchDetailContent(detailKey);
+          if (detail.images) announcement.images = detail.images;
+          if (detail.content) announcement.content = detail.content;
+          if (detail.publishDate) announcement.create_date = detail.publishDate;
+          Utilities.sleep(300);
+        }
+      }
+      
+      const message = service.buildMessage(announcement, serviceConfig);
+      
+      if (announcement.images && announcement.images.length > 1) {
+        telegram.sendMediaGroup(
+          announcement.images,
+          message,
+          serviceConfig.messageThreadId
+        );
+      } else if (announcement.images && announcement.images.length === 1) {
+        telegram.sendPhoto(
+          announcement.images[0],
+          message,
+          serviceConfig.messageThreadId
+        );
+      } else if (announcement.poster) {
+        telegram.sendPhoto(
+          announcement.poster,
+          message,
+          serviceConfig.messageThreadId
+        );
+      } else {
+        telegram.sendMessage(message, serviceConfig.messageThreadId);
+      }
+      
+      const dateStr = announcement.create_date || new Date().toISOString();
+      db.setServiceData(serviceConfig.name, {
+        [announcement.id]: dateStr
+      }, serviceConfig.pruneSeparator);
+      
+      Utilities.sleep(1000);
+    }
+    
+  } catch (e) {
+    Logger.log(`Error processing service ${serviceConfig.name}: ${e.message}`);
   }
   
   Logger.log('Main execution completed');
 }
 
 function getServiceInstance(serviceName) {
-  switch(serviceName) {
-    case 'jyb':
-      return new JYBService();
-    case 'seednet':
-      return new SeednetService();
-    case 'elf':
-      return new ElfService();
-    case 'fet':
-      return new FetService();
-    case 'hinet':
-      return new HinetService();
-    case 'homeplus':
-      return new HomeplusService();
-    case 'costco':
-      return new CostcoService();
-    case 'taiwanmobile':
-      return new TaiwanMobileService();
-    case 'cpc':
-      return new CPCService();
-    case 'smc':
-      return new SMCService();
-    case 'tncfd':
-      return new TncfdService();
-    default:
-      return null;
-  }
+  const serviceClasses = {
+    'jyb': JYBService,
+    'seednet': SeednetService,
+    'elf': ElfService,
+    'fet': FetService,
+    'hinet': HinetService,
+    'homeplus': HomeplusService,
+    'costco': CostcoService,
+    'taiwanmobile': TaiwanMobileService,
+    'cpc': CPCService,
+    'smc': SMCService,
+    'tncfd': TncfdService
+  };
+
+  const ServiceClass = serviceClasses[serviceName];
+  return ServiceClass ? new ServiceClass() : null;
 }
 
 function skipService() {
-  let serviceName = 'tncfd';
+  let serviceName = 'smc';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -314,13 +333,4 @@ function debugSend() {
     Logger.log(`Error: ${e.message}`);
     Logger.log(`Stack: ${e.stack}`);
   }
-}
-
-function setupTimeTrigger() {
-  ScriptApp.newTrigger('main')
-    .timeBased()
-    .everyHours(1)
-    .create();
-  
-  Logger.log('Time trigger created: runs every 1 hour');
 }

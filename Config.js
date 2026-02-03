@@ -88,14 +88,16 @@ const CONFIG_SERVICES = [
     displayName: '台灣海纜動態',
     url: 'https://smc.peering.tw',
     enabled: true,
-    messageThreadId: 751
+    messageThreadId: 751,
+    pruneSeparator: '_'
   },
   {
     name: 'tncfd',
     displayName: '台南消防出勤',
     url: 'https://119dts.tncfd.gov.tw/DTS/caselist/html',
     enabled: true,
-    messageThreadId: 965
+    messageThreadId: 965,
+    pruneSeparator: '_'
   }
 ];
 
