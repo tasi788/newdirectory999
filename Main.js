@@ -16,7 +16,7 @@ function runFrequentServices() {
   const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
   
   // List of services that run every 5 minutes
-  const frequentServices = ['tncfd'];
+  const frequentServices = ['tncfd', 'tpcfd'];
   
   Logger.log('Starting Frequent Services execution');
   
@@ -122,7 +122,8 @@ function getServiceInstance(serviceName) {
     'taiwanmobile': TaiwanMobileService,
     'cpc': CPCService,
     'smc': SMCService,
-    'tncfd': TncfdService
+    'tncfd': TncfdService,
+    'tpcfd': TpcfdService
   };
 
   const ServiceClass = serviceClasses[serviceName];
@@ -130,7 +131,7 @@ function getServiceInstance(serviceName) {
 }
 
 function skipService() {
-  let serviceName = 'smc';
+  let serviceName = 'tpcfd';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);

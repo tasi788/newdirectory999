@@ -98,6 +98,14 @@ const CONFIG_SERVICES = [
     enabled: true,
     messageThreadId: 965,
     pruneSeparator: '_'
+  },
+  {
+    name: 'tpcfd',
+    displayName: '台北消防出勤',
+    url: 'https://service119.tfd.gov.tw/service119/citizenCase/caseList',
+    enabled: true,
+    messageThreadId: 1358,
+    pruneSeparator: '_'
   }
 ];
 
