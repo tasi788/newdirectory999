@@ -100,7 +100,7 @@ class TncfdService extends ServiceInterface {
         announcements.push(announcement);
       }
       
-      return announcements;
+      return announcements.reverse();
       
     } catch (e) {
       Logger.log(`Error fetching TNCFD announcements: ${e.message}`);
