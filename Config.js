@@ -108,6 +108,15 @@ const CONFIG_SERVICES = [
     messageThreadId: 1358,
     pruneSeparator: '_',
     enableMessageEdit: true
+  },
+  {
+    name: 'tccfd',
+    displayName: '台中消防出勤',
+    url: 'https://www.fire.taichung.gov.tw/caselist/index.asp?Parser=99,8,226,,,,,,,,1',
+    enabled: true,
+    messageThreadId: 1791,
+    pruneSeparator: '_',
+    enableMessageEdit: true
   }
 ];
 

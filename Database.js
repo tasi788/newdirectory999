@@ -97,6 +97,86 @@ class Database {
     this.setServiceData(serviceName, skipData);
   }
 
+  skipServiceFreq(serviceName, ids, pruneSeparator) {
+    const data = this.sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][0] === serviceName) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    
+    let existingData = {};
+    if (rowIndex > 0) {
+      try {
+        existingData = JSON.parse(data[rowIndex - 1][1] || '{}');
+      } catch (e) {
+        Logger.log(`Error parsing existing data for ${serviceName}: ${e.message}`);
+      }
+    }
+    
+    const now = new Date().toISOString();
+    
+    for (const id of ids) {
+      let messageId = 0; // Default to 0 for new items
+      
+      // Check for exact match
+      if (existingData[id]) {
+         const existing = existingData[id];
+         // Preserve existing messageId if object
+         if (typeof existing === 'object' && existing.messageId) {
+           messageId = existing.messageId;
+         }
+      } else if (pruneSeparator) {
+        // Check for prefix match to inherit message ID from previous status
+        // and prune the old status key
+        const idParts = id.split(pruneSeparator);
+        const prefix = idParts[0];
+        
+        for (const existingId of Object.keys(existingData)) {
+          if (existingId === prefix || existingId.startsWith(prefix + pruneSeparator)) {
+             const existing = existingData[existingId];
+             if (typeof existing === 'object' && existing.messageId) {
+               messageId = existing.messageId;
+             }
+             // Prune the old key as we are updating it to the new status
+             delete existingData[existingId];
+             // We found the match, so we can stop searching for this prefix
+             // (Assuming only one active status per event)
+             break; 
+          }
+        }
+      }
+      
+      // Set the new data
+      existingData[id] = {
+        date: now,
+        messageId: messageId
+      };
+    }
+    
+    // Cleanup/Prune logic for size (same as standard set)
+    const entries = Object.entries(existingData);
+    if (entries.length > 100) {
+      entries.sort((a, b) => {
+        const dateA = typeof a[1] === 'object' ? a[1].date : a[1];
+        const dateB = typeof b[1] === 'object' ? b[1].date : b[1];
+        return new Date(dateB) - new Date(dateA);
+      });
+      existingData = Object.fromEntries(entries.slice(0, 100));
+    }
+    
+    const jsonData = JSON.stringify(existingData);
+    
+    if (rowIndex > 0) {
+      this.sheet.getRange(rowIndex, 2).setValue(jsonData);
+    } else {
+      this.sheet.appendRow([serviceName, jsonData]);
+    }
+  }
+
   hasId(serviceName, id) {
     const data = this.getServiceData(serviceName);
     if (data === null) {

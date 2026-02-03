@@ -16,7 +16,7 @@ function runFrequentServices() {
   const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
   
   // List of services that run every 5 minutes
-  const frequentServices = ['tncfd', 'tpcfd'];
+  const frequentServices = ['tncfd', 'tpcfd', 'tccfd'];
   
   Logger.log('Starting Frequent Services execution');
   
@@ -165,7 +165,8 @@ function getServiceInstance(serviceName) {
     'cpc': CPCService,
     'smc': SMCService,
     'tncfd': TncfdService,
-    'tpcfd': TpcfdService
+    'tpcfd': TpcfdService,
+    'tccfd': TccfdService,
   };
 
   const ServiceClass = serviceClasses[serviceName];
@@ -173,7 +174,7 @@ function getServiceInstance(serviceName) {
 }
 
 function skipService() {
-  let serviceName = 'tpcfd';
+  let serviceName = 'tccfd';
   const CONFIG = getConfig();
   const db = new Database(CONFIG.SHEET_ID);
   const service = getServiceInstance(serviceName);
@@ -216,6 +217,38 @@ function skipAllServices() {
   }
   
   Logger.log('All services skip completed');
+}
+
+function skipFreq(targetServiceName) {
+  const CONFIG = getConfig();
+  const db = new Database(CONFIG.SHEET_ID);
+  
+  for (const serviceConfig of CONFIG.SERVICES) {
+    if (targetServiceName && serviceConfig.name !== targetServiceName) continue;
+    
+    if (!serviceConfig.enabled) continue;
+    if (!serviceConfig.enableMessageEdit) continue;
+    
+    const service = getServiceInstance(serviceConfig.name);
+    if (!service) {
+      Logger.log(`Service ${serviceConfig.name} not found`);
+      continue;
+    }
+    
+    try {
+      const ids = service.skip();
+      Logger.log(`Skipping (Freq) ${ids.length} announcements for ${serviceConfig.name}`);
+      // Pass pruneSeparator to handle inheritance
+      db.skipServiceFreq(serviceConfig.name, ids, serviceConfig.pruneSeparator);
+      Logger.log(`Skip (Freq) completed for ${serviceConfig.name}`);
+    } catch (e) {
+      Logger.log(`Error skipping (Freq) ${serviceConfig.name}: ${e.message}`);
+    }
+    
+    if (!targetServiceName) Utilities.sleep(500);
+  }
+  
+  Logger.log('Freq services skip completed');
 }
 
 function debugService() {
