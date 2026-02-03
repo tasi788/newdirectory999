@@ -97,7 +97,8 @@ const CONFIG_SERVICES = [
     url: 'https://119dts.tncfd.gov.tw/DTS/caselist/html',
     enabled: true,
     messageThreadId: 965,
-    pruneSeparator: '_'
+    pruneSeparator: '_',
+    enableMessageEdit: true
   },
   {
     name: 'tpcfd',
@@ -105,7 +106,8 @@ const CONFIG_SERVICES = [
     url: 'https://service119.tfd.gov.tw/service119/citizenCase/caseList',
     enabled: true,
     messageThreadId: 1358,
-    pruneSeparator: '_'
+    pruneSeparator: '_',
+    enableMessageEdit: true
   }
 ];
 

@@ -50,8 +50,21 @@ function processService(serviceConfig, db, telegram) {
     const announcements = service.fetch();
     Logger.log(`Found ${announcements.length} announcements for ${serviceConfig.name}`);
     
+    // For services with message editing, deduplicate by prefix and keep only the latest
+    let processAnnouncements = announcements;
+    if (serviceConfig.enableMessageEdit && serviceConfig.pruneSeparator) {
+      const latestByPrefix = {};
+      for (const announcement of announcements) {
+        const idPrefix = announcement.id.split(serviceConfig.pruneSeparator)[0];
+        // Keep the latest one (assuming announcements are already sorted old to new)
+        latestByPrefix[idPrefix] = announcement;
+      }
+      processAnnouncements = Object.values(latestByPrefix);
+      Logger.log(`After deduplication: ${processAnnouncements.length} unique cases`);
+    }
+    
     const newAnnouncements = [];
-    for (const announcement of announcements) {
+    for (const announcement of processAnnouncements) {
       if (!db.hasId(serviceConfig.name, announcement.id)) {
         newAnnouncements.push(announcement);
       }
@@ -72,33 +85,62 @@ function processService(serviceConfig, db, telegram) {
       }
       
       const message = service.buildMessage(announcement, serviceConfig);
+      const dateStr = announcement.create_date || new Date().toISOString();
       
-      if (announcement.images && announcement.images.length > 1) {
-        telegram.sendMediaGroup(
-          announcement.images,
-          message,
-          serviceConfig.messageThreadId
-        );
-      } else if (announcement.images && announcement.images.length === 1) {
-        telegram.sendPhoto(
-          announcement.images[0],
-          message,
-          serviceConfig.messageThreadId
-        );
-      } else if (announcement.poster) {
-        telegram.sendPhoto(
-          announcement.poster,
-          message,
-          serviceConfig.messageThreadId
-        );
-      } else {
-        telegram.sendMessage(message, serviceConfig.messageThreadId);
+      // Check if we should edit an existing message
+      let shouldEdit = false;
+      let existingMessageId = null;
+      
+      if (serviceConfig.enableMessageEdit && serviceConfig.pruneSeparator) {
+        const idPrefix = announcement.id.split(serviceConfig.pruneSeparator)[0];
+        existingMessageId = db.getMessageId(serviceConfig.name, idPrefix);
+        shouldEdit = existingMessageId !== null;
       }
       
-      const dateStr = announcement.create_date || new Date().toISOString();
-      db.setServiceData(serviceConfig.name, {
-        [announcement.id]: dateStr
-      }, serviceConfig.pruneSeparator);
+      if (shouldEdit) {
+        // Edit existing message
+        Logger.log(`Editing message ${existingMessageId} for ${announcement.id}`);
+        telegram.editMessageText(existingMessageId, message);
+        
+        // Update database with same messageId
+        db.setServiceDataWithMessage(serviceConfig.name, announcement.id, dateStr, existingMessageId, serviceConfig.pruneSeparator);
+      } else {
+        // Send new message
+        let result = null;
+        
+        if (announcement.images && announcement.images.length > 1) {
+          result = telegram.sendMediaGroup(
+            announcement.images,
+            message,
+            serviceConfig.messageThreadId
+          );
+        } else if (announcement.images && announcement.images.length === 1) {
+          result = telegram.sendPhoto(
+            announcement.images[0],
+            message,
+            serviceConfig.messageThreadId
+          );
+        } else if (announcement.poster) {
+          result = telegram.sendPhoto(
+            announcement.poster,
+            message,
+            serviceConfig.messageThreadId
+          );
+        } else {
+          result = telegram.sendMessage(message, serviceConfig.messageThreadId);
+        }
+        
+        // Store message ID if editing is enabled
+        if (serviceConfig.enableMessageEdit && result && result.message_id) {
+          Logger.log(`Storing message ID ${result.message_id} for ${announcement.id}`);
+          db.setServiceDataWithMessage(serviceConfig.name, announcement.id, dateStr, result.message_id, serviceConfig.pruneSeparator);
+        } else {
+          // Old format: just store date
+          db.setServiceData(serviceConfig.name, {
+            [announcement.id]: dateStr
+          }, serviceConfig.pruneSeparator);
+        }
+      }
       
       Utilities.sleep(1000);
     }

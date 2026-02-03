@@ -159,4 +159,36 @@ class Telegram {
       return null;
     }
   }
+
+  editMessageText(messageId, text) {
+    const payload = {
+      chat_id: this.chatId,
+      message_id: messageId,
+      text: text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true
+    };
+    
+    const options = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+    
+    try {
+      const response = UrlFetchApp.fetch(`${this.baseUrl}/editMessageText`, options);
+      const result = JSON.parse(response.getContentText());
+      
+      if (!result.ok) {
+        Logger.log(`Telegram editMessageText error: ${result.description}`);
+        return null;
+      }
+      
+      return result.result;
+    } catch (e) {
+      Logger.log(`Telegram editMessageText exception: ${e.message}`);
+      return null;
+    }
+  }
 }
