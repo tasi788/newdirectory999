@@ -16,7 +16,7 @@ function runFrequentServices() {
   const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
   
   // List of services that run every 5 minutes
-  const frequentServices = ['tncfd', 'tpcfd', 'tccfd'];
+  const frequentServices = ['tncfd','tccfd','tpcfd','ntpcfd'];
   
   Logger.log('Starting Frequent Services execution');
   
@@ -167,6 +167,7 @@ function getServiceInstance(serviceName) {
     'tncfd': TncfdService,
     'tpcfd': TpcfdService,
     'tccfd': TccfdService,
+    'ntpcfd': NtpcfdService,
   };
 
   const ServiceClass = serviceClasses[serviceName];

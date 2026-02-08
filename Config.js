@@ -118,6 +118,14 @@ const CONFIG_SERVICES = [
     messageThreadId: 1791,
     pruneSeparator: '_',
     enableMessageEdit: true
+  },
+  {
+    name: 'ntpcfd',
+    displayName: '新北消防出勤',
+    url: 'https://e.ntpc.gov.tw/v3/api/map/dynamic/layer/rescue',
+    enabled: true,
+    messageThreadId: 9277,
+    pruneSeparator: '_' 
   }
 ];
 
