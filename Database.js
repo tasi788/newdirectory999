@@ -177,12 +177,32 @@ class Database {
     }
   }
 
-  hasId(serviceName, id) {
+  hasId(serviceName, id, pruneSeparator) {
     const data = this.getServiceData(serviceName);
     if (data === null) {
       return false;
     }
-    return id in data;
+    
+    // First check for exact match
+    if (id in data) {
+      return true;
+    }
+    
+    // If pruneSeparator is provided, check if any existing ID shares the same prefix
+    // This prevents duplicate notifications when status changes
+    if (pruneSeparator) {
+      const idParts = id.split(pruneSeparator);
+      const prefix = idParts[0];
+      
+      for (const existingId of Object.keys(data)) {
+        // Check if existing ID matches the prefix or starts with prefix + separator
+        if (existingId === prefix || existingId.startsWith(prefix + pruneSeparator)) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   }
 
   getMessageId(serviceName, idPrefix) {

@@ -89,7 +89,8 @@ const CONFIG_SERVICES = [
     url: 'https://smc.peering.tw',
     enabled: true,
     messageThreadId: 751,
-    pruneSeparator: '_'
+    pruneSeparator: '_',
+    enableMessageEdit: true
   },
   {
     name: 'tncfd',
