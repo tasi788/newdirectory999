@@ -73,8 +73,9 @@ class Database {
     
     const entries = Object.entries(existingData);
     if (entries.length > 100) {
-      entries.sort((a, b) => new Date(b[1]) - new Date(a[1]));
-      existingData = Object.fromEntries(entries.slice(0, 100));
+      // Sort by date ascending (oldest first), then keep last 100 (newest)
+      entries.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+      existingData = Object.fromEntries(entries.slice(-100));
     }
     
     const jsonData = JSON.stringify(existingData);
@@ -160,12 +161,13 @@ class Database {
     // Cleanup/Prune logic for size (same as standard set)
     const entries = Object.entries(existingData);
     if (entries.length > 100) {
+      // Sort by date ascending (oldest first), then keep last 100 (newest)
       entries.sort((a, b) => {
         const dateA = typeof a[1] === 'object' ? a[1].date : a[1];
         const dateB = typeof b[1] === 'object' ? b[1].date : b[1];
-        return new Date(dateB) - new Date(dateA);
+        return new Date(dateA) - new Date(dateB);
       });
-      existingData = Object.fromEntries(entries.slice(0, 100));
+      existingData = Object.fromEntries(entries.slice(-100));
     }
     
     const jsonData = JSON.stringify(existingData);
@@ -276,13 +278,13 @@ class Database {
     
     const entries = Object.entries(existingData);
     if (entries.length > 100) {
-      // Sort by date (handle both old and new formats)
+      // Sort by date ascending (oldest first), then keep last 100 (newest)
       entries.sort((a, b) => {
         const dateA = typeof a[1] === 'object' ? a[1].date : a[1];
         const dateB = typeof b[1] === 'object' ? b[1].date : b[1];
-        return new Date(dateB) - new Date(dateA);
+        return new Date(dateA) - new Date(dateB);
       });
-      existingData = Object.fromEntries(entries.slice(0, 100));
+      existingData = Object.fromEntries(entries.slice(-100));
     }
     
     const jsonData = JSON.stringify(existingData);
