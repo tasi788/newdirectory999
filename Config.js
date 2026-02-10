@@ -88,9 +88,7 @@ const CONFIG_SERVICES = [
     displayName: '台灣海纜動態',
     url: 'https://smc.peering.tw',
     enabled: true,
-    messageThreadId: 751,
-    pruneSeparator: '_',
-    enableMessageEdit: true
+    messageThreadId: 751
   },
   {
     name: 'tncfd',

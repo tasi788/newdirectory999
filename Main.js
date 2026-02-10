@@ -411,3 +411,21 @@ function debugSend() {
     Logger.log(`Stack: ${e.stack}`);
   }
 }
+
+function testRun() {
+  const serviceName = 'smc'; // Change this to test other services
+  const CONFIG = getConfig();
+  const db = new Database(CONFIG.SHEET_ID);
+  const telegram = new Telegram(CONFIG.TELEGRAM_BOT_TOKEN, CONFIG.TELEGRAM_CHAT_ID);
+  
+  const serviceConfig = CONFIG.SERVICES.find(s => s.name === serviceName);
+  
+  if (!serviceConfig) {
+    Logger.log(`Service ${serviceName} not found`);
+    return;
+  }
+  
+  Logger.log(`========== TEST RUN: ${serviceName} ==========`);
+  processService(serviceConfig, db, telegram);
+  Logger.log(`========== TEST RUN COMPLETED ==========`);
+}

@@ -19,10 +19,19 @@ class SMCService extends ServiceInterface {
       }
       
       const announcements = [];
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
       for (const incident of incidents) {
+        // Filter out old incidents (older than 7 days)
+        const incidentDate = new Date(incident.date);
+        if (incidentDate < sevenDaysAgo) {
+          continue;
+        }
+
         // Base announcement for the incident itself
-        const baseIdStr = incident.title + incident.date;
+        // Include status in ID so that status changes generate new IDs (new messages)
+        const baseIdStr = incident.title + incident.date + (incident.status || '');
         const id = this.generateMD5(baseIdStr);
         
         const announcement = this.formatAnnouncement({
@@ -45,6 +54,12 @@ class SMCService extends ServiceInterface {
         
         // Check if resolved and create a separate announcement
         if (incident.resolved_at) {
+          // Check if resolved date is also within the last 7 days
+          const resolvedDate = new Date(incident.resolved_at);
+          if (resolvedDate < sevenDaysAgo) {
+            continue;
+          }
+
           const resolvedId = id + '_resolved';
           
           const resolvedAnnouncement = this.formatAnnouncement({
