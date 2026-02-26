@@ -6,7 +6,20 @@ class KcfdService extends ServiceInterface {
 
   fetch() {
     try {
-      const response = UrlFetchApp.fetch(this.apiUrl, { muteHttpExceptions: true });
+      const config = getConfig();
+      let fetchUrl = this.apiUrl;
+      const options = {
+        muteHttpExceptions: true
+      };
+
+      if (config.PROXY_URL && config.BASIC_AUTH) {
+         fetchUrl = `${config.PROXY_URL}/${this.apiUrl}`;
+         options.headers = {
+           'Authorization': `Basic ${Utilities.base64Encode(config.BASIC_AUTH)}`
+         };
+      }
+
+      const response = UrlFetchApp.fetch(fetchUrl, options);
       const content = response.getContentText('UTF-8');
       
       const announcements = [];

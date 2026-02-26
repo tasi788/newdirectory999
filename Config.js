@@ -133,6 +133,15 @@ const CONFIG_SERVICES = [
     messageThreadId: 38480,
     pruneSeparator: '_',
     enableMessageEdit: true
+  },
+  {
+    name: 'chfd',
+    displayName: '彰化消防出勤',
+    url: 'https://www.chfd.gov.tw/RealInfo/index.aspx?Parser=99,3,29',
+    enabled: true,
+    messageThreadId: 38488,
+    pruneSeparator: '_',
+    enableMessageEdit: true
   }
 ];
 
