@@ -124,6 +124,15 @@ const CONFIG_SERVICES = [
     enabled: true,
     messageThreadId: 9277,
     pruneSeparator: '_' 
+  },
+  {
+    name: 'kcfd',
+    displayName: '高雄消防出勤',
+    url: 'https://119dts.fdkc.gov.tw/tyfdapp/webControlKC?page=Tfqve7Vz8sjTOllavM2iqQ==&f=IC2SZJqIMDj1EwKMezrgvw==',
+    enabled: true,
+    messageThreadId: 38480,
+    pruneSeparator: '_',
+    enableMessageEdit: true
   }
 ];
 
