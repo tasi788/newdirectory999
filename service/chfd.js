@@ -19,14 +19,14 @@ class ChfdService extends ServiceInterface {
         let locRaw = match[5].trim();
         let locClean = locRaw;
         
-        // Remove trailing img tag if presents
-        locClean = locClean.replace(/<img[^>]*>/, '').trim();
-        
         // Remove markdown tags if any
         const aMatch = /<a[^>]*>(.*?)<\/a>/.exec(locRaw);
         if (aMatch) {
           locClean = aMatch[1].trim();
         }
+        
+        // Remove trailing img tag if presents
+        locClean = locClean.replace(/<img[^>]*>/g, '').trim();
 
         const num = match[1].trim();
         const inTime = match[2].trim();

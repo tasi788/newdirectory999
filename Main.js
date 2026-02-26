@@ -255,7 +255,7 @@ function skipFreq(targetServiceName) {
 }
 
 function debugService() {
-  let serviceName = 'tncfd';
+  let serviceName = 'chfd';
   const CONFIG = getConfig();
   const service = getServiceInstance(serviceName);
   
