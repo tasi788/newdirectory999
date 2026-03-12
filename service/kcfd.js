@@ -1,7 +1,7 @@
 class KcfdService extends ServiceInterface {
   constructor() {
     super('kcfd');
-    this.apiUrl = 'https://119dts.fdkc.gov.tw/tyfdapp/webControlKC?page=Tfqve7Vz8sjTOllavM2iqQ==&f=IC2SZJqIMDj1EwKMezrgvw==';
+    this.apiUrl = 'https://119dts.fdkc.gov.tw/DTS/caselist/html';
   }
 
   fetch() {
