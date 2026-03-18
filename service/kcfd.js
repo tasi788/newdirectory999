@@ -27,19 +27,17 @@ class KcfdService extends ServiceInterface {
       // Match all <tr> that contains table_tr1 or table_tr2 
       // Need to extract: time, major type, minor type, location, unit, status
       // HTML format:
-      // <tr class="table_tr1">
-      //   <td align="center">1</td>
-      //   <td align="center">2026/02/26 11:55:34</td>
-      //   <td align="center">緊急救護</td>
-      //   <td align="center"> 急病</td>
-      //   <td align="center">
-      //     高雄市苓雅區
-      //   </td>
-      //   <td align="center">苓雅分隊</td>
-      //   <td align="center">已出動</td>
+      // <tr>
+      //   <td>1</td>
+      //   <td>2026/03/17 15:42:57</td>
+      //   <td>緊急救護</td>
+      //   <td>路倒</td>  
+      //   <td>高雄市鳳山區鳳仁路</td>
+      //   <td>鳳山分隊</td>
+      //   <td>已派遣</td>
       // </tr>
       
-      const trRegex = /<tr class="table_tr[12]">\s*<td[^>]*>\d+<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>\s*(.*?)\s*<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>/gs;
+      const trRegex = /<tr>\s*<td[^>]*>\s*\d+\s*<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>\s*(.*?)\s*<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<td[^>]*>(.*?)<\/td>\s*<\/tr>/gs;
       
       let match;
       while ((match = trRegex.exec(content)) !== null) {
