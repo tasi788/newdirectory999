@@ -53,12 +53,24 @@ class Telegram {
       payload.message_thread_id = messageThreadId;
     }
     
-    const options = {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    };
+    let options = {};
+    if (typeof photoUrl === 'object' && photoUrl.toString() === 'Blob') {
+       // It's a Blob object. Apps Script UrlFetchApp automatically handles 
+       // multipart/form-data when payload is an Object (not stringified).
+       payload.photo = photoUrl;
+       options = {
+         method: 'post',
+         payload: payload,
+         muteHttpExceptions: true
+       };
+    } else {
+       options = {
+         method: 'post',
+         contentType: 'application/json',
+         payload: JSON.stringify(payload),
+         muteHttpExceptions: true
+       };
+    }
     
     try {
       const response = UrlFetchApp.fetch(`${this.baseUrl}/sendPhoto`, options);
@@ -116,10 +128,19 @@ class Telegram {
       return null;
     }
     
+    let hasBlob = false;
     const media = mediaUrls.map((url, index) => {
+      let itemMedia = url;
+      if (typeof url === 'object' && url.toString() === 'Blob') {
+        hasBlob = true;
+        // attach name will reference the multipart field
+        const attachName = `attach_photo_${index}`;
+        itemMedia = `attach://${attachName}`;
+      }
+      
       const item = {
         type: 'photo',
-        media: url
+        media: itemMedia
       };
       if (index === 0 && caption) {
         item.caption = caption;
@@ -128,21 +149,43 @@ class Telegram {
       return item;
     });
     
-    const payload = {
-      chat_id: this.chatId,
-      media: media
-    };
+    let payload = {};
+    let options = {};
     
-    if (messageThreadId) {
-      payload.message_thread_id = messageThreadId;
+    if (hasBlob) {
+      payload.chat_id = this.chatId;
+      if (messageThreadId) {
+         payload.message_thread_id = messageThreadId;
+      }
+      // Stringify the media json array
+      payload.media = JSON.stringify(media);
+      
+      // Inject blobs into payload
+      mediaUrls.forEach((url, index) => {
+         if (typeof url === 'object' && url.toString() === 'Blob') {
+            payload[`attach_photo_${index}`] = url;
+         }
+      });
+      options = {
+         method: 'post',
+         payload: payload,
+         muteHttpExceptions: true
+      };
+    } else {
+      payload = {
+        chat_id: this.chatId,
+        media: media
+      };
+      if (messageThreadId) {
+        payload.message_thread_id = messageThreadId;
+      }
+      options = {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true
+      };
     }
-    
-    const options = {
-      method: 'post',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    };
     
     try {
       const response = UrlFetchApp.fetch(`${this.baseUrl}/sendMediaGroup`, options);

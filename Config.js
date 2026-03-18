@@ -6,6 +6,7 @@ function getConfig() {
   const sheetId = scriptProperties.getProperty('SHEET_ID');
   const proxyUrl = scriptProperties.getProperty('PROXY_URL');
   const basicAuth = scriptProperties.getProperty('BASIC_AUTH');
+  const apdfToken = scriptProperties.getProperty('APDF_TOKEN');
   
   return {
     TELEGRAM_BOT_TOKEN: botToken,
@@ -13,6 +14,7 @@ function getConfig() {
     SHEET_ID: sheetId,
     PROXY_URL: proxyUrl,
     BASIC_AUTH: basicAuth,
+    APDF_TOKEN: apdfToken,
     
     SERVICES: CONFIG_SERVICES
   };
