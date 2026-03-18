@@ -142,6 +142,13 @@ const CONFIG_SERVICES = [
     messageThreadId: 38488,
     pruneSeparator: '_',
     enableMessageEdit: true
+  },
+  {
+    name: 'fa',
+    displayName: '農業部漁業署',
+    url: 'https://www.fa.gov.tw/list.php?theme=Ship_notice',
+    enabled: true,
+    messageThreadId: 73549
   }
 ];
 

@@ -170,6 +170,7 @@ function getServiceInstance(serviceName) {
     'ntpcfd': NtpcfdService,
     'kcfd': KcfdService,
     'chfd': ChfdService,
+    'fa': FaService,
   };
 
   const ServiceClass = serviceClasses[serviceName];
